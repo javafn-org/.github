@@ -14,6 +14,8 @@
 
 `java(fn)` is a collection of lightweight libraries with no dependencies, which add a few additional functional tools to the java language, most notably a `Result` class for error handling without exceptions and a set of tuples that allow better readability in streams.  We are in the process of breaking things into separate libraries so only the necessary components can be added as dependencies.  We are also in the process of upgrading to support Java 17.  Current versions depend on 17 as new features are added, but some of the initial classes are still not using the latest features, which would simplify the code base.
 
+Note, we're undergoing a number of changes as we migrate to Java 17, based on internal feedback from the existing usage.  The code will be much improved, however the documentation will likely get out of sync.  Feel free to put in tickets, especially if you see something in the docs or README that doesn't work.
+
 ## Result
 
 The `Result` class is an algebraic type that represents the possibly unsuccessful result of an operation.  Similar to an `Either` in many languages, a `Result` wraps a value of type ERR or of type OK, but never both.  `null` is a valid value, but the Result will either be an err or an ok, and the other value will be empty (similar to Optional.empty()).
@@ -97,7 +99,7 @@ versus
 
 ```java
 IntStream.range(0, 10).mapToObj(i -> Pair.of(i, i*2))
-    .filter(pair -> pair.filter1(i -> i % 2 == 0)
+    .filter(pair -> pair.matches1(i -> i % 2 == 0)
     .map(pair -> pair.map( (l, r) -> l + r))
     .forEach(System.out::println);
 ```
@@ -106,8 +108,8 @@ and even better
 
 ```java
 IntStream.range(0, 10).mapToObj(i -> Pair.of(i, i*2))
-    .filter(Pair.Filter1(i -> i % 2 == 0)
-    .map(Pair.Map( (l, r) -> l + r))
+    .filter(Pairs.matches1(i -> i % 2 == 0)
+    .map(Pairs.map( (l, r) -> l + r))
     .forEach(System.out::println);
 ```
 
@@ -115,30 +117,30 @@ Notice that you get to name the parameters you're interested in, similar to dest
 
 ```java
 stream.map(pair -> pair.map( (l, r) -> ...));
-stream.map(Pair.Map( (l, r) -> ...));
+stream.map(Pairs.map( (l, r) -> ...));
 ```
 
 The `Trio` and `Quad` classes are similar to `Pair` but are not documented so we don't run the risk of them getting out of sync.  Refer to the documentation for `Pair` for all three tuples.
 
 Another feature of the tuples is the ability to create chunks and sliding windows over arrays.
 
-## Idx
+## Index
 
 Sometimes we need to enumerate the items in a stream, for example, if you have a list (with a known size) and you want to provide a completion percentage.  This tuple behaves similar to a Pair, except that the first element is a primative int, and each element in the stream receives an increasing value from 0.
 
 Similar to [Rust's enumerate](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.enumerate) or [Python's enumerate](https://docs.python.org/3/library/functions.html#enumerate).
 
 ```java
-someStream.map(Idx.enumerate())
-     .peek(Idx.Peek( (i, item) -> println("Completing item " + i ))
+someStream.map(Indexed.index())
+     .peek(Indexed.peek( (i, item) -> println("Completing item " + i ))
      ...;
 ```
 
 or equivalently,
 
 ```java
-Idx.enumerate(someStream)
-     .peek(Idx.Peek( (i, item) -> println("Completing item " + i ))
+Indexed.index(someStream)
+     .peek(idx -> idx.peek( (i, item) -> println("Completing item " + i ))
      ...;
 ```
 
